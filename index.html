@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0d14">
+<title>WebDewOS · 网页模拟器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+/* ===== Material 3 设计令牌 ===== */
+:root{
+  --md-primary:#a8c7fa; --md-on-primary:#062e6f; --md-primary-container:#0842a0; --md-on-primary-container:#d3e3fd;
+  --md-secondary:#c2c6dc; --md-on-secondary:#2c3043; --md-secondary-container:#42475a; --md-on-secondary-container:#dee1f7;
+  --md-tertiary:#efb8c8; --md-on-tertiary:#4a1130; --md-tertiary-container:#662647; --md-on-tertiary-container:#ffd9e7;
+  --md-error:#ffb4ab; --md-error-container:#93000a; --md-on-error:#690005;
+  --md-surface:#0b0d14; --md-surface-dim:#090b11; --md-surface-bright:#1c1e27; --md-surface-container-lowest:#05070c;
+  --md-surface-container-low:#11131a; --md-surface-container:#15171f; --md-surface-container-high:#1f212a; --md-surface-container-highest:#292b34;
+  --md-on-surface:#e3e2e6; --md-on-surface-variant:#c3c6d4; --md-outline:#8d91a1; --md-outline-variant:#44474e;
+  --md-scrim:#000;
+  --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:28px; --r-full:999px;
+  --e1:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);
+  --e2:0 2px 6px 2px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --e3:0 4px 8px 3px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.2);
+  --e4:0 8px 12px 6px rgba(0,0,0,.4),0 4px 4px rgba(0,0,0,.2);
+  --state-hover:.08; --state-focus:.12; --state-press:.16;
+  --t:ease .28s, transform .22s cubic-bezier(.2,0,0,1);
+}
+[data-theme="light"]{
+  --md-primary:#1a73e8; --md-on-primary:#fff; --md-primary-container:#d3e3fd; --md-on-primary-container:#041e49;
+  --md-secondary:#5c5f72; --md-on-secondary:#fff; --md-secondary-container:#e1e3f8; --md-on-secondary-container:#181c2b;
+  --md-tertiary:#8f4b6b; --md-on-tertiary:#fff; --md-tertiary-container:#ffd9e7; --md-on-tertiary-container:#3a0020;
+  --md-error:#b3261e; --md-error-container:#f9dedc; --md-on-error:#fff;
+  --md-surface:#fdfcff; --md-surface-dim:#eae8ee; --md-surface-bright:#fdfcff; --md-surface-container-lowest:#fff;
+  --md-surface-container-low:#f3f3fa; --md-surface-container:#edeff6; --md-surface-container-high:#e7eaf1; --md-surface-container-highest:#e1e3eb;
+  --md-on-surface:#1a1c1e; --md-on-surface-variant:#43464e; --md-outline:#74777f; --md-outline-variant:#c4c6d0;
+  --e1:0 1px 2px rgba(0,0,0,.1),0 1px 3px 1px rgba(0,0,0,.06);
+  --e2:0 2px 6px 2px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --e3:0 4px 8px 3px rgba(0,0,0,.1),0 1px 3px rgba(0,0,0,.06);
+  --e4:0 8px 12px 6px rgba(0,0,0,.12),0 4px 4px rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"Noto Sans SC",system-ui,-apple-system,sans-serif;
+  background:radial-gradient(120% 90% at 20% 0%,#1a2030 0%,var(--md-surface) 55%);
+  color:var(--md-on-surface);overflow:hidden;display:grid;place-items:center;
+  transition:background var(--t);
+}
+[data-theme="light"] body{background:radial-gradient(120% 90% at 20% 0%,#e8f0fd 0%,var(--md-surface) 55%)}
+.material-symbols-outlined{font-family:"Material Symbols Outlined";font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:"liga";-webkit-font-smoothing:antialiased;font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
+.icon-filled{font-variation-settings:"FILL" 1,"wght" 400,"GRAD" 0,"opsz" 24}
+button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer}
+
+/* ===== 手机外壳 ===== */
+.device{
+  position:relative;width:min(400px,96vw);height:min(840px,94vh);
+  background:linear-gradient(160deg,#2b2f3d,#13151c);
+  border-radius:44px;padding:10px;box-shadow:var(--e4),0 0 0 2px #3d4152 inset;
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;
+  background:var(--md-surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* ===== 状态栏 ===== */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:30px;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px 0 26px;font-size:12.5px;font-weight:700;letter-spacing:.3px;
+  color:var(--md-on-surface);pointer-events:none;
+}
+.statusbar .sb-right{display:flex;align-items:center;gap:4px}
+.statusbar .material-symbols-outlined{font-size:14px}
+.battery{position:relative;width:20px;height:11px;border:1.5px solid currentColor;border-radius:3px;display:inline-block}
+.battery::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.battery i{position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:11px;background:currentColor;border-radius:1px;display:block}
+
+/* ===== 壁纸与桌面 ===== */
+.wallpaper{position:absolute;inset:0;background:linear-gradient(200deg,#1b2a4a 0%,#2d1b4a 45%,#4a1b3a 100%);transition:opacity .4s}
+[data-theme="light"] .wallpaper{background:linear-gradient(200deg,#cfe0ff 0%,#e6d4ff 45%,#ffd9e7 100%)}
+.wallpaper::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 40% at 75% 20%,rgba(168,199,250,.35),transparent 70%)}
+.home{position:absolute;inset:0;overflow:hidden;padding:0}
+.home-pages{display:flex;width:200%;height:100%;transition:transform .3s cubic-bezier(.2,0,0,1)}
+.home-page{width:50%;height:100%;overflow-y:auto;padding:44px 18px 120px;scrollbar-width:none}
+.three-button .home-page{padding-bottom:100px}
+.home::-webkit-scrollbar{display:none}
+.clock-widget{text-align:center;margin:14px 0 22px;animation:rise .5s both}
+.clock-widget .time{font-size:46px;font-weight:700;letter-spacing:1px;line-height:1.1;text-shadow:0 2px 20px rgba(0,0,0,.35)}
+.clock-widget .date{font-size:12.5px;opacity:.85;margin-top:4px;letter-spacing:1px}
+[data-theme="light"] .clock-widget .time{text-shadow:0 2px 12px rgba(255,255,255,.6)}
+.app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform var(--t)}
+.app:active{transform:scale(.9)}
+.app .icon{
+  width:54px;height:54px;border-radius:var(--r-lg);display:grid;place-items:center;
+  background:var(--md-surface-container-high);color:var(--md-primary);
+  box-shadow:var(--e1);transition:box-shadow var(--t),background var(--t);
+}
+.app:active .icon{box-shadow:var(--e2);background:var(--md-surface-container-highest)}
+.app .icon .material-symbols-outlined{font-size:26px}
+.app span{font-size:11px;opacity:.9;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.page-dots{display:flex;justify-content:center;gap:6px;margin-top:20px}
+.page-dots i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.3;display:block}
+.page-dots i.on{opacity:.9;width:16px;border-radius:3px}
+
+/* ===== 手势条 / 导航栏 ===== */
+.navbar{
+  position:absolute;bottom:0;left:0;right:0;height:70px;z-index:60;
+  display:flex;align-items:flex-start;justify-content:center;padding-top:8px;
+}
+.gesture-pill{width:110px;height:4px;border-radius:2px;background:var(--md-on-surface);opacity:.5;position:absolute;bottom:8px}
+.nav-3btn{display:none;gap:0;align-items:center;justify-content:space-around;width:100%;padding:6px 12px 14px}
+.nav-3btn button{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;transition:background var(--t)}
+.nav-3btn button:active{background:var(--md-surface-container-highest)}
+.nav-3btn .material-symbols-outlined{font-size:20px}
+.three-button .nav-3btn{display:flex}
+.three-button .gesture-pill{display:none}
+
+/* ===== 应用窗口 ===== */
+.app-layer{
+  position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
+  background:var(--md-surface);border-radius:34px;overflow:hidden;
+  transform:translateY(100%);pointer-events:none;transition:transform .34s cubic-bezier(.2,0,0,1);
+}
+.app-layer.open{transform:translateY(0);pointer-events:auto}
+.appbar{
+  height:64px;padding:30px 8px 0;display:flex;align-items:center;gap:4px;flex-shrink:0;
+  background:var(--md-surface);transition:box-shadow var(--t),background var(--t);
+}
+.appbar.scrolled{box-shadow:var(--e1)}
+.appbar h1{flex:1;font-size:20px;font-weight:700;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;position:relative;transition:background var(--t)}
+.iconbtn::before{content:"";position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:0;transition:opacity .15s}
+.iconbtn:hover::before{opacity:var(--state-hover)}
+.iconbtn:active::before{opacity:var(--state-press)}
+.app-body{flex:1;overflow-y:auto;padding:4px 16px 100px;scrollbar-width:none}
+.app-body::-webkit-scrollbar{display:none}
+
+/* ===== 通用组件 ===== */
+.card{background:var(--md-surface-container-low);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;box-shadow:var(--e1);transition:box-shadow var(--t)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.card p{font-size:13px;line-height:1.7;color:var(--md-on-surface-variant)}
+.section-label{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--md-on-surface-variant);margin:18px 0 8px 4px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 20px;
+  border-radius:var(--r-full);font-size:13px;font-weight:700;position:relative;overflow:hidden;transition:box-shadow var(--t),background var(--t);
+}
+.btn.filled{background:var(--md-primary);color:var(--md-on-primary);box-shadow:var(--e1)}
+.btn.filled:hover{box-shadow:var(--e2)}
+.btn.outlined{border:1px solid var(--md-outline-variant);color:var(--md-primary)}
+.btn.text{color:var(--md-primary);padding:0 12px}
+.btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .15s}
+.btn:hover::before{opacity:var(--state-hover)}
+.btn:active::before{opacity:var(--state-press)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--md-outline-variant);
+  font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:6px;position:relative;overflow:hidden;transition:background var(--t),border-color var(--t);
+}
+.chip::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .15s}
+.chip:hover::before{opacity:var(--state-hover)}
+.chip.on{background:var(--md-secondary-container);border-color:transparent;color:var(--md-on-secondary-container)}
+.switch{width:48px;height:26px;border-radius:13px;border:2px solid var(--md-outline);background:var(--md-surface-container-highest);position:relative;transition:background var(--t),border-color var(--t)}
+.switch i{position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--md-outline);transition:all .25s cubic-bezier(.2,0,0,1)}
+.switch.on{background:var(--md-primary);border-color:var(--md-primary)}
+.switch.on i{left:22px;background:var(--md-on-primary);width:20px;height:20px;top:0}
+.list-row{display:flex;align-items:center;gap:14px;padding:12px 4px;cursor:pointer;position:relative;border-radius:var(--r-sm)}
+.list-row::before{content:"";position:absolute;inset:0 4px;border-radius:var(--r-sm);background:currentColor;opacity:0;transition:opacity .15s}
+.list-row:hover::before{opacity:var(--state-hover)}
+.list-row .lead{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--md-secondary-container);color:var(--md-on-secondary-container);flex-shrink:0}
+.list-row .txt{flex:1;min-width:0}
+.list-row .txt b{display:block;font-size:13.5px;font-weight:500}
+.list-row .txt small{display:block;font-size:11.5px;color:var(--md-on-surface-variant);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.searchbar{height:40px;border-radius:var(--r-full);background:var(--md-surface-container-high);display:flex;align-items:center;gap:8px;padding:0 14px;margin:6px 0 10px;transition:box-shadow var(--t)}
+.searchbar:focus-within{box-shadow:var(--e1)}
+.searchbar input{flex:1;border:0;background:none;outline:none;color:inherit;font-size:13px;font-family:inherit}
+.searchbar input::placeholder{color:var(--md-on-surface-variant)}
+.empty{text-align:center;padding:50px 20px;color:var(--md-on-surface-variant)}
+.empty .material-symbols-outlined{font-size:44px;opacity:.5;margin-bottom:8px}
+.empty p{font-size:12.5px}
+.fab{
+  position:absolute;right:18px;bottom:86px;z-index:55;height:56px;min-width:56px;padding:0 18px;
+  border-radius:16px;background:var(--md-primary-container);color:var(--md-on-primary-container);
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;box-shadow:var(--e3);transition:box-shadow var(--t),transform var(--t);
+}
+.fab:active{transform:scale(.94)}
+.hidden{display:none!important}
+
+/* ===== 设置里的子页 ===== */
+.subpage{position:absolute;inset:0;z-index:50;background:var(--md-surface);border-radius:34px;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,0,0,1);display:flex;flex-direction:column}
+.subpage.open{transform:translateX(0)}
+
+/* ===== Snackbar / 弹窗 ===== */
+.snackbar{
+  position:absolute;left:12px;right:12px;bottom:86px;z-index:90;
+  background:var(--md-surface-container);color:var(--md-on-surface);border-radius:var(--r-sm);
+  padding:14px 16px;font-size:13px;box-shadow:var(--e3);display:flex;align-items:center;gap:12px;
+  transform:translateY(140%);transition:transform .3s cubic-bezier(.2,0,0,1);border:1px solid var(--md-outline-variant);
+}
+.snackbar.show{transform:translateY(0)}
+.snackbar .btn{margin-left:auto;height:32px;padding:0 10px}
+.scrim{position:absolute;inset:0;z-index:80;background:var(--md-scrim);opacity:0;pointer-events:none;transition:opacity .3s;border-radius:34px}
+.scrim.show{opacity:.5;pointer-events:auto}
+.dialog{
+  position:absolute;z-index:85;left:24px;right:24px;top:50%;transform:translate(-50%,-50%) scale(.9);
+  background:var(--md-surface-container-high);border-radius:var(--r-xl);padding:24px;opacity:0;pointer-events:none;
+  transition:all .28s cubic-bezier(.2,0,0,1);box-shadow:var(--e4);
+}
+.dialog.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.dialog h3{font-size:20px;margin-bottom:8px}
+.dialog p{font-size:13px;color:var(--md-on-surface-variant);line-height:1.6}
+.dialog .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+/* ===== 锁屏 ===== */
+.lock{
+  position:absolute;inset:0;z-index:95;background:linear-gradient(200deg,#16213c,#311a45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  transition:opacity .35s;border-radius:34px;
+}
+[data-theme="light"] .lock{background:linear-gradient(200deg,#c3d6f5,#e3c9f0)}
+.lock.gone{opacity:0;pointer-events:none}
+.lock .l-time{font-size:52px;font-weight:700;letter-spacing:1px;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.3)}
+[data-theme="light"] .lock .l-time{color:#20232a;text-shadow:none}
+.lock .l-date{font-size:12.5px;letter-spacing:2px;color:rgba(255,255,255,.8);margin:6px 0 40px}
+[data-theme="light"] .lock .l-date{color:rgba(0,0,0,.55)}
+.lock .l-hint{font-size:11.5px;letter-spacing:2px;color:rgba(255,255,255,.65);margin-top:18px}
+[data-theme="light"] .lock .l-hint{color:rgba(0,0,0,.45)}
+.lock .l-avatar{width:64px;height:64px;border-radius:50%;background:var(--md-primary-container);color:var(--md-on-primary-container);display:grid;place-items:center;font-size:26px;font-weight:700;box-shadow:var(--e3);margin-bottom:14px}
+.lock .l-name{font-size:14px;font-weight:700;color:#fff}
+[data-theme="light"] .lock .l-name{color:#20232a}
+
+/* 通知中心 */
+.notif-center{
+  position:absolute;top:0;left:0;right:0;z-index:58;background:var(--md-surface-container);
+  border-radius:0 0 var(--r-lg) var(--r-lg);padding:36px 16px 16px;box-shadow:var(--e3);
+  transform:translateY(-110%);transition:transform .32s cubic-bezier(.2,0,0,1);
+}
+.notif-center.show{transform:translateY(0)}
+.quick-settings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.qs{aspect-ratio:1;border-radius:var(--r-md);background:var(--md-surface-container-high);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;transition:background var(--t)}
+.qs .material-symbols-outlined{font-size:18px}
+.qs.on{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+.notif-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--md-outline-variant);font-size:12px}
+.notif-item:first-of-type{border-top:0}
+.notif-item .material-symbols-outlined{font-size:18px;color:var(--md-primary)}
+
+/* 计算器等 */
+.calc-display{background:var(--md-surface-container-lowest);border-radius:var(--r-lg);padding:18px 16px;text-align:right;font-size:30px;font-weight:700;margin-bottom:14px;min-height:74px;display:flex;align-items:flex-end;justify-content:flex-end;overflow:hidden}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-grid button{height:52px;border-radius:var(--r-md);background:var(--md-surface-container-high);font-size:17px;font-weight:700;transition:background var(--t)}
+.calc-grid button:active{background:var(--md-surface-container-highest)}
+.calc-grid button.op{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+.calc-grid button.acc{background:var(--md-error-container);color:var(--md-error)}
+.term{background:var(--md-surface-container-lowest);border-radius:var(--r-md);padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.6;height:260px;overflow-y:auto;color:var(--md-primary);white-space:pre-wrap}
+.term-input{display:flex;gap:8px;margin-top:10px}
+.term-input input{flex:1;height:38px;border-radius:var(--r-sm);border:1px solid var(--md-outline-variant);background:var(--md-surface-container-low);color:inherit;padding:0 12px;font-family:inherit;font-size:13px;outline:none}
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.photo-grid div{aspect-ratio:1;border-radius:var(--r-md);display:grid;place-items:center;font-size:11px;color:#fff;font-weight:700;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.note-item{background:var(--md-surface-container-low);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px}
+.note-item b{font-size:13px;display:block;margin-bottom:3px}
+.note-item p{font-size:12px;color:var(--md-on-surface-variant);line-height:1.6}
+
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== 多任务（最近任务） ===== */
+.recents{position:absolute;inset:0;z-index:55;display:none;flex-direction:column;background:var(--md-scrim);backdrop-filter:blur(12px);padding:44px 16px 96px}
+.recents.show{display:flex}
+.recents-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:#fff;font-size:13px}
+.recents-head button{color:#fff;font-size:12.5px;padding:6px 12px;border-radius:16px;background:rgba(255,255,255,.16)}
+.recents-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.rec-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;opacity:.85;font-size:14px}
+.rec-card{background:var(--md-surface);border-radius:16px;box-shadow:var(--e2);padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;width:100%;animation:recIn .25s cubic-bezier(.2,0,0,1)}
+@keyframes recIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.rec-card .material-symbols-outlined{font-size:22px;color:var(--md-primary)}
+.rec-card b{font-size:14px;display:block}
+.rec-card small{opacity:.6;font-size:11.5px}
+.rec-card .close{margin-left:auto;color:var(--md-on-surface-variant)}
+.rec-shot{width:46px;height:46px;border-radius:10px;display:grid;place-items:center;background:var(--md-primary-container);color:var(--md-primary);margin-right:2px}
+.rec-shot .material-symbols-outlined{font-size:24px}
+</style>
+</head>
+<body data-theme="dark">
+<div class="device">
+  <div class="screen" id="screen">
+
+    <!-- 状态栏 -->
+    <div class="statusbar">
+      <span id="sbTime">9:41</span>
+      <div class="sb-right">
+        <span class="material-symbols-outlined icon-filled" id="sbWifi">wifi</span>
+        <span class="material-symbols-outlined" id="sbMute">volume_up</span>
+        <span class="battery"><i></i></span>
+      </div>
+    </div>
+
+    <!-- 通知中心 -->
+    <div class="notif-center" id="notifCenter">
+      <div class="quick-settings">
+        <button class="qs on" data-qs="wifi"><span class="material-symbols-outlined">wifi</span>Wi-Fi</button>
+        <button class="qs on" data-qs="bt"><span class="material-symbols-outlined">bluetooth</span>蓝牙</button>
+        <button class="qs" data-qs="dnd" id="qsDnd"><span class="material-symbols-outlined">do_not_disturb_on</span>勿扰</button>
+        <button class="qs" data-qs="theme" id="qsTheme"><span class="material-symbols-outlined">dark_mode</span>浅色</button>
+        <button class="qs on" data-qs="flash"><span class="material-symbols-outlined">flashlight_on</span>手电</button>
+        <button class="qs" data-qs="rotate"><span class="material-symbols-outlined">screen_rotation</span>旋转</button>
+        <button class="qs" data-qs="save"><span class="material-symbols-outlined">battery_saver</span>省电</button>
+        <button class="qs" data-qs="airplane" id="qsPlane"><span class="material-symbols-outlined">flight</span>飞行</button>
+      </div>
+      <div id="notifList"></div>
+    </div>
+
+    <!-- 桌面 -->
+    <div class="wallpaper"></div>
+    <div class="home" id="home">
+      <div class="home-pages" id="homePages">
+      <div class="home-page" id="homePage0">
+        <div class="clock-widget">
+        <div class="time" id="homeTime">9:41</div>
+        <div class="date" id="homeDate">11月25日 星期三</div>
+      </div>
+        <div class="app-grid" id="appGrid"></div>
+      </div>
+      <div class="home-page" id="homePage1">
+        <div style="font-size:13px;opacity:.7;margin:8px 2px 10px">第二页 · 全部应用</div>
+        <div class="app-grid" id="appGrid2"></div>
+      </div>
+    </div>
+      <div class="page-dots" id="pageDots"><i class="on"></i><i></i></div>
+    </div>
+
+    <!-- 应用容器 -->
+    <div class="app-layer" id="appLayer">
+      <div class="appbar" id="appbar">
+        <button class="iconbtn" id="btnBack"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 id="appTitle">应用</h1>
+        <button class="iconbtn" id="btnAppMore"><span class="material-symbols-outlined">more_vert</span></button>
+      </div>
+      <div class="app-body" id="appBody"></div>
+    </div>
+
+    <button class="fab hidden" id="fab"><span class="material-symbols-outlined">add</span><span id="fabText">新建</span></button>
+
+    <!-- 设置子页 -->
+    <div class="subpage" id="subpage">
+      <div class="appbar">
+        <button class="iconbtn" id="btnSubBack"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 id="subTitle">详情</h1>
+      </div>
+      <div class="app-body" id="subBody"></div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="navbar" id="navbar">
+      <div class="nav-3btn">
+        <button id="navBack" title="返回"><span class="material-symbols-outlined">arrow_back</span></button>
+        <button id="navHome" title="主页"><span class="material-symbols-outlined">home</span></button>
+        <button id="navRecents" title="多任务"><span class="material-symbols-outlined">square</span></button>
+      </div>
+      <div class="gesture-pill"></div>
+    </div>
+
+    <!-- 最近任务 -->
+    <div class="recents" id="recents">
+      <div class="recents-head"><span>最近任务</span><button id="recClear">清除全部</button></div>
+      <div class="recents-list" id="recentsList"></div>
+    </div>
+
+    <!-- 锁屏 -->
+    <div class="lock" id="lock">
+      <div class="l-avatar">威</div>
+      <div class="l-name">WebDewOS · 网页模拟器</div>
+      <div class="l-time" id="lockTime">9:41</div>
+      <div class="l-date" id="lockDate">11月25日 星期三</div>
+      <div class="l-hint">上滑或点击解锁</div>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="dialog" id="dialog">
+      <h3 id="dlgTitle">提示</h3>
+      <p id="dlgText">内容</p>
+      <div class="actions">
+        <button class="btn text" id="dlgCancel">取消</button>
+        <button class="btn filled" id="dlgOk">确定</button>
+      </div>
+    </div>
+    <div class="snackbar" id="snackbar"><span id="snackText">已保存</span><button class="btn text" id="snackBtn">撤销</button></div>
+  </div>
+</div>
+
+<script>
+/* ===== 状态与存储 ===== */
+const store = {
+  get(k, def){ try{ const v = localStorage.getItem('webdroid:'+k); return v===null ? def : JSON.parse(v); }catch(e){ return def; } },
+  set(k, v){ try{ localStorage.setItem('webdroid:'+k, JSON.stringify(v)); }catch(e){} }
+};
+const state = {
+  theme: store.get('theme','dark'),
+  nav: store.get('nav','3btn'),
+  homePage: +(store.get('homePage', 0)) || 0,
+  recent: store.get('recent', null),
+  brightness: store.get('brightness', 80),
+  fontSize: store.get('fontSize', '中'),
+  notes: store.get('notes', [{t:'欢迎使用 WebDewOS · 网页模拟器', c:'这是一个用网页技术模拟的安卓系统界面，数据保存在浏览器本地。'}]),
+  todos: store.get('todos', [{t:'完善个人主页', d:false},{t:'试一试计算器', d:false}]),
+  unread: true
+};
+document.body.dataset.theme = state.theme;
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const icon = (n, filled) => `<span class="material-symbols-outlined${filled?' icon-filled':''}">${n}</span>`;
+
+function toast(msg, btnText){
+  $('#snackText').textContent = msg;
+  $('#snackBtn').classList.toggle('hidden', !btnText);
+  if(btnText) $('#snackBtn').textContent = btnText;
+  const sb = $('#snackbar');
+  sb.classList.add('show');
+  clearTimeout(sb._t);
+  sb._t = setTimeout(()=>sb.classList.remove('show'), 2800);
+}
+function dialog(title, text){
+  $('#dlgTitle').textContent = title;
+  $('#dlgText').textContent = text;
+  $('#dlgOk').onclick = null;            // 清掉上一次弹窗遗留的动作
+  $('#dialog').classList.add('show');
+  $('#scrim').classList.add('show');
+}
+
+/* ===== 时钟 ===== */
+const WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+function tick(){
+  const d = new Date();
+  const hm = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  const date = `${d.getMonth()+1}月${d.getDate()}日 ${WEEK[d.getDay()]}`;
+  $('#sbTime').textContent = hm;
+  $('#homeTime').textContent = hm;
+  $('#homeDate').textContent = date;
+  $('#lockTime').textContent = hm;
+  $('#lockDate').textContent = date;
+}
+setInterval(tick, 1000); tick();
+
+/* ===== 桌面应用 ===== */
+const APPS = [
+  {id:'settings', name:'设置', icon:'settings', bg:'var(--md-primary-container)', fg:'var(--md-on-primary-container)'},
+  {id:'browser',  name:'浏览器', icon:'language', bg:'#0842a0', fg:'#d3e3fd'},
+  {id:'gallery',  name:'相册', icon:'photo_library', bg:'#662647', fg:'#ffd9e7'},
+  {id:'music',    name:'音乐', icon:'music_note', bg:'#4a1130', fg:'#efb8c8'},
+  {id:'notes',    name:'便签', icon:'sticky_note_2', bg:'#8a5a00', fg:'#ffe6a1'},
+  {id:'todo',     name:'待办', icon:'checklist', bg:'#1e5b3a', fg:'#b8f0cf'},
+  {id:'calculator',name:'计算器', icon:'calculate', bg:'#42475a', fg:'#dee1f7'},
+  {id:'terminal', name:'终端', icon:'terminal', bg:'#000', fg:'#a8c7fa'},
+  {id:'weather',  name:'天气', icon:'partly_cloudy_day', bg:'#0d5a7a', fg:'#b8e8ff'},
+  {id:'clock',    name:'时钟', icon:'schedule', bg:'#3a2a6a', fg:'#d9c9ff'},
+  {id:'about',    name:'关于本机', icon:'smartphone', bg:'#5c3a1a', fg:'#ffd9b8'},
+  {id:'store',    name:'应用商店', icon:'shop', bg:'#1a4a3a', fg:'#b8f0d8'}
+];
+  const __parts = APPS.map(a => `
+  <div class="app" data-app="${a.id}">
+    <div class="icon" style="background:${a.bg};color:${a.fg}">${icon(a.icon)}</div>
+    <span>${a.name}</span>
+  </div>`);
+  $('#appGrid').innerHTML = __parts.slice(0, 8).join('');
+  $('#appGrid2').innerHTML = __parts.slice(8).join('');
+
+/* ===== 应用关闭 / 返回 ===== */
+function closeApp(){
+  $('#appLayer').classList.remove('open');
+  $('#fab').classList.add('hidden');
+  $('#subpage').classList.remove('open');
+  history.replaceState({app:false}, '');
+}
+function openApp(id){
+  const a = allApps().find(x=>x.id===id); if(!a) return;
+  $('#appTitle').textContent = a.name;
+  $('#appBody').innerHTML = RENDER[id] ? RENDER[id]() : appPageHTML(a);
+  $('#appBody').scrollTop = 0;
+  $('#appbar').classList.remove('scrolled');
+  $('#appLayer').classList.add('open');
+  $('#fab').classList.add('hidden');
+  state.recent = id; store.set('recent', state.recent);
+  if(AFTER[id]) AFTER[id]();
+  history.replaceState({app:id}, '');
+}
+/* ===== 桌面左右滑动分页 ===== */
+function setHomePage(i){
+  state.homePage = i;
+  $('#homePages').style.transform = 'translateX(-' + (i * 50) + '%)';
+  $$('#pageDots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+let hx = 0, hy = 0;
+$('#home').addEventListener('touchstart', e => { hx = e.touches[0].clientX; hy = e.touches[0].clientY; }, {passive:true});
+$('#home').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - hx, dy = e.changedTouches[0].clientY - hy;
+  if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+  setHomePage(Math.min(1, Math.max(0, state.homePage + (dx < 0 ? 1 : -1))));
+}, {passive:true});
+$('#pageDots').addEventListener('click', e => {
+  const ds = $$('#pageDots i'); const i = ds.indexOf(e.target);
+  if(i > -1) setHomePage(i);
+});
+setHomePage(state.homePage || 0);
+
+/* ===== 最近任务（多任务） ===== */
+function openRecents(){
+  const list = $('#recentsList');
+  const a = allApps().find(x => x.id === state.recent);
+  if(a){
+    list.innerHTML = `<button class="rec-card" data-rec="${a.id}">
+      <span class="rec-shot">${icon(a.icon)}</span>
+      <div class="txt"><b>${a.name}</b><small>正在运行</small></div>
+      <span class="material-symbols-outlined close" data-rec-one="${a.id}">close</span></button>`;
+  } else {
+    list.innerHTML = `<div class="rec-empty">${icon('apps')}<p>目前没有应用在运行</p></div>`;
+  }
+  $('#recents').classList.add('show');
+}
+function clearRecents(){
+  state.recent = null; store.set('recent', null);
+  $('#recents').classList.remove('show');
+  closeApp();
+  toast('已清除全部最近任务，已返回主屏幕');
+}
+$('#recents').addEventListener('click', e => {
+  const one = e.target.closest('[data-rec-one]');
+  if(one){
+    if(state.recent === one.dataset.recOne){ state.recent=null; store.set('recent',null); }
+    $('#recents').classList.remove('show');
+    closeApp();
+    toast('已关闭应用，已返回主屏幕');
+    return;
+  }
+  if(e.target.closest('[data-rec-close]') || e.target.closest('#recClear')){ clearRecents(); return; }
+  const c = e.target.closest('[data-rec]');
+  if(c){ $('#recents').classList.remove('show'); openApp(c.dataset.rec); return; }
+  $('#recents').classList.remove('show');
+});
+
+$('#btnBack').onclick = closeApp;
+$('#btnAppMore').onclick = () => toast('更多选项：演示界面');
+$('#appBody').addEventListener('scroll', e => {
+  $('#appbar').classList.toggle('scrolled', e.target.scrollTop > 4);
+});
+$('#homePages').addEventListener('click', e => {
+  const el = e.target.closest('.app'); if(el) openApp(el.dataset.app);
+});
+
+/* ===== 各应用渲染 ===== */
+const RENDER = {
+  settings(){
+    return `
+    <div class="card" style="display:flex;align-items:center;gap:14px">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--md-primary-container);color:var(--md-on-primary-container);display:grid;place-items:center;font-weight:700">威</div>
+      <div><b style="font-size:15px">威斯 / 小威</b><p style="font-size:12px;color:var(--md-on-surface-variant)">WebDewOS · 网页模拟器 14.0</p></div>
+    </div>
+    <div class="searchbar">${icon('search')}<input id="setSearch" placeholder="搜索设置项"></div>
+    <div class="section-label">常用设置</div>
+    <div id="setList">
+      <div class="list-row" data-sub="display"><div class="lead">${icon('display_settings')}</div><div class="txt"><b>显示</b><small>主题 · 亮度 · 字体大小</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="sound"><div class="lead">${icon('volume_up')}</div><div class="txt"><b>声音与振动</b><small>媒体音量 · 勿扰模式</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="net"><div class="lead">${icon('wifi')}</div><div class="txt"><b>网络与互联网</b><small>Wi-Fi · 蓝牙 · 飞行模式</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="navset"><div class="lead">${icon('gesture')}</div><div class="txt"><b>系统导航</b><small>手势导航 / 三按钮</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="storage"><div class="lead">${icon('storage')}</div><div class="txt"><b>存储</b><small>已用 12.4 GB / 64 GB</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="apps"><div class="lead">${icon('package_2')}</div><div class="txt"><b>应用与安装包</b><small>导出 .wdpk · 导入安装</small></div>${icon('chevron_right')}</div>
+      <div class="list-row" data-sub="aboutset"><div class="lead">${icon('perm_device_information')}</div><div class="txt"><b>关于手机</b><small>设备信息与状态</small></div>${icon('chevron_right')}</div>
+    </div>
+    <div class="section-label">快捷开关</div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('dark_mode')}深色主题</span>
+      <button class="switch ${state.theme==='dark'?'on':''}" id="setTheme"><i></i></button>
+    </div>`;
+  },
+  browser(){
+    return `
+    <div class="searchbar">${icon('lock')}<input id="urlInput" placeholder="搜索或输入网址" value="webdroid://home"></div>
+    <div class="chips">${['推荐','设计','安卓','前端','壁纸'].map((c,i)=>`<button class="chip ${i===0?'on':''}">${c}</button>`).join('')}</div>
+    <div id="webView">
+      <div class="card"><div class="card-title">${icon('auto_awesome')} 欢迎来到 WebDew 网络</div><p>这是一个演示浏览器，地址栏可以输入任何内容，页面会以卡片形式模拟加载结果。</p></div>
+      <div class="card"><div class="card-title">${icon('trending_up')} 今日热门</div>
+        ${['Material Design 3 规范速览','如何用 CSS 变量做动态配色','网页也能做成系统界面'].map(t=>`<div class="list-row" data-fake="${t}"><div class="lead">${icon('article')}</div><div class="txt"><b>${t}</b><small>演示条目 · 点击查看详情</small></div></div>`).join('')}
+      </div>
+    </div>`;
+  },
+  gallery(){
+    const grad = ['linear-gradient(135deg,#1b2a4a,#4a1b3a)','linear-gradient(135deg,#0d5a7a,#662647)','linear-gradient(135deg,#3a2a6a,#8a5a00)','linear-gradient(135deg,#1e5b3a,#0d5a7a)','linear-gradient(135deg,#5c3a1a,#4a1130)','linear-gradient(135deg,#42475a,#0842a0)'];
+    return `<div class="photo-grid">${grad.map((g,i)=>`<div style="background:${g}" data-photo="${i+1}">照片 ${i+1}</div>`).join('')}</div>`;
+  },
+  music(){
+    return `
+    <div class="card" style="text-align:center;padding:26px 16px">
+      <div style="width:110px;height:110px;border-radius:var(--r-lg);margin:0 auto 14px;background:linear-gradient(135deg,var(--md-primary-container),var(--md-tertiary-container));display:grid;place-items:center">${icon('album','true')}</div>
+      <div style="font-size:15px;font-weight:700">夜航 · Night Cruise</div>
+      <p style="font-size:12px;margin-top:4px">WebDew Sound · 演示曲目</p>
+      <div style="height:6px;border-radius:3px;background:var(--md-surface-container-highest);margin:18px 0 8px;overflow:hidden"><i style="display:block;height:100%;width:38%;background:var(--md-primary);border-radius:3px"></i></div>
+      <div style="display:flex;justify-content:center;gap:10px;align-items:center">
+        <button class="iconbtn" data-play="prev">${icon('skip_previous','true')}</button>
+        <button class="iconbtn" data-play="toggle" style="width:52px;height:52px;background:var(--md-primary-container);color:var(--md-on-primary-container)">${icon('play_arrow','true')}</button>
+        <button class="iconbtn" data-play="next">${icon('skip_next','true')}</button>
+      </div>
+    </div>
+    <div class="section-label">播放列表</div>
+    ${['夜航','玻璃城','迷雾列车','站台尽头'].map((t,i)=>`<div class="list-row" data-play="pick"><div class="lead">${icon('music_note')}</div><div class="txt"><b>${t}</b><small>演示音频 · 03:${(12+i*3).toString().padStart(2,'0')}</small></div></div>`).join('')}`;
+  },
+  notes(){
+    return `
+    <div class="searchbar">${icon('search')}<input id="noteSearch" placeholder="搜索便签"></div>
+    <div id="noteList">${state.notes.map((n,i)=>`<div class="note-item" data-note="${i}"><b>${n.t}</b><p>${n.c}</p></div>`).join('') || '<div class="empty">'+icon('sticky_note_2')+'<p>还没有便签</p></div>'}</div>`;
+  },
+  todo(){
+    const done = state.todos.filter(t=>t.d).length;
+    return `
+    <div class="card"><div class="card-title">${icon('flag')} 今日进度 ${done}/${state.todos.length}</div>
+      <div style="height:6px;border-radius:3px;background:var(--md-surface-container-highest);overflow:hidden;margin-top:8px"><i style="display:block;height:100%;width:${state.todos.length?done/state.todos.length*100:0}%;background:var(--md-primary);border-radius:3px;transition:width .3s"></i></div>
+    </div>
+    <div id="todoList">${state.todos.map((t,i)=>`
+      <div class="list-row" data-todo="${i}">
+        <div class="lead" style="background:${t.d?'var(--md-primary-container)':'var(--md-surface-container-highest)'};color:${t.d?'var(--md-on-primary-container)':'var(--md-on-surface-variant)'}">${t.d?icon('check','true'):icon('radio_button_unchecked')}</div>
+        <div class="txt"><b style="${t.d?'text-decoration:line-through;opacity:.5':''}">${t.t}</b></div>
+        ${icon('delete')}
+      </div>`).join('')}</div>
+    <div class="empty" style="padding:20px"><p>点击下方按钮新增待办</p></div>`;
+  },
+  calculator(){
+    return `
+    <div class="calc-display" id="calcOut">0</div>
+    <div class="calc-grid">
+      <button class="acc" data-calc="C">AC</button><button data-calc="(">(</button><button data-calc=")">)</button><button class="op" data-calc="/">÷</button>
+      <button data-calc="7">7</button><button data-calc="8">8</button><button data-calc="9">9</button><button class="op" data-calc="*">×</button>
+      <button data-calc="4">4</button><button data-calc="5">5</button><button data-calc="6">6</button><button class="op" data-calc="-">−</button>
+      <button data-calc="1">1</button><button data-calc="2">2</button><button data-calc="3">3</button><button class="op" data-calc="+">+</button>
+      <button data-calc="0">0</button><button data-calc=".">.</button><button data-calc="back">⌫</button><button class="op" data-calc="=">=</button>
+    </div>`;
+  },
+  terminal(){
+    return `
+    <div class="term" id="termOut">WebDewOS shell 14.0
+输入 help 查看可用命令。
+
+webdroid@os:~$ </div>
+    <div class="term-input"><input id="termInput" placeholder="输入命令…" autocomplete="off"><button class="btn filled" id="termGo">运行</button></div>`;
+  },
+  weather(){
+    return `
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div style="font-size:44px;color:var(--md-primary)">${icon('partly_cloudy_day','true')}</div>
+      <div style="font-size:38px;font-weight:700;margin:6px 0 2px">26°</div>
+      <p>山东 枣庄 · 多云转晴 · 体感 24°</p>
+    </div>
+    <div class="section-label">未来几日（演示数据）</div>
+    ${[['今天','多云','26° / 17°'],['明天','晴','28° / 18°'],['周四','小雨','23° / 16°'],['周五','晴','27° / 17°']].map(d=>
+      `<div class="list-row"><div class="lead">${icon(d[1]==='晴'?'sunny':d[1]==='小雨'?'rainy':'cloud')}</div><div class="txt"><b>${d[0]}</b><small>${d[1]}</small></div><span style="font-size:12.5px;opacity:.8">${d[2]}</span></div>`).join('')}
+    <p style="font-size:11px;color:var(--md-on-surface-variant);margin-top:14px;text-align:center">天气为界面演示数据，非真实预报</p>`;
+  },
+  clock(){
+    return `
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div style="font-size:36px;font-weight:700" id="clockBig">9:41:00</div>
+      <p id="clockDate">11月25日 星期三</p>
+    </div>
+    <div class="section-label">闹钟</div>
+    ${[['07:30','工作日起床'],['09:00','周末闹钟'],['23:30','睡觉提醒']].map(a=>
+      `<div class="card" style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1"><b style="font-size:15px">${a[0]}</b><p>${a[1]}</p></div>
+        <button class="switch on" data-alarm><i></i></button>
+      </div>`).join('')}`;
+  },
+  about(){
+    return `
+    <div class="card" style="text-align:center;padding:24px 16px">
+      <div style="width:72px;height:72px;border-radius:var(--r-lg);background:var(--md-primary-container);color:var(--md-on-primary-container);display:grid;place-items:center;margin:0 auto 12px;font-size:30px;font-weight:700">W</div>
+      <div style="font-size:16px;font-weight:700">WebDewOS · 网页模拟器</div>
+      <p>版本 14 · browser build</p>
+    </div>
+    <div class="card">
+      ${[['设备型号','WebDew Virtual'],['系统版本','WebDewOS · 网页模拟器 14.0'],['存储空间','64 GB · 已用 12.4 GB'],['内存','4 GB'],['分辨率',(window.innerWidth|0)+' × '+(window.innerHeight|0)],['设计语言','Material Design 3'],['页面运行',(performance.now()/60000).toFixed(1)+' 分钟']].map(r=>`<div class="list-row" style="cursor:default"><div class="txt"><b>${r[0]}</b></div><span style="font-size:12.5px;opacity:.8">${r[1]}</span></div>`).join('')}
+    </div>
+    <p style="font-size:11px;color:var(--md-on-surface-variant);text-align:center;margin-top:12px">纯前端模拟界面，不会收集任何数据</p>`;
+  },
+  store(){
+    const cats=['全部','效率','创意','游戏'];
+    return `
+    <div class="searchbar">${icon('search')}<input id="storeSearch" placeholder="搜索应用"></div>
+    <div class="chips" id="storeChips">${cats.map((c,i)=>`<button class="chip ${i===0?'on':''}" data-cat="${c}">${c}</button>`).join('')}</div>
+    <div id="storeList">${storeListHTML()}</div>
+    <div class="card" style="margin-top:10px"><div class="card-title">${icon('description')} .wdpk 安装包</div>
+      <p>应用安装后可导出为 <b>.wdpk</b> 安装包文件，也可生成分享安装码；在“设置 → 应用与安装包”中可导入装回系统。</p>
+      <button class="btn outlined" data-act="import-wdpk" style="margin-top:8px">导入 .wdpk 安装包</button></div>`;
+  }
+};
+function storeListHTML(){
+  const q=(store._q||'').trim().toLowerCase(), cat=store._cat||'全部';
+  const rows=STORE_APPS.filter(a=>(cat==='全部'||a.cat===cat)&&(!q||(a.name+a.dev+a.desc).toLowerCase().includes(q))).map(a=>{
+    const ins=isInstalled(a.id);
+    return `<div class="list-row store-row"><div class="lead" style="background:${a.bg};color:${a.fg}">${icon(a.icon)}</div>
+      <div class="txt"><b>${esc(a.name)}</b><small>${esc(a.dev)} · ${esc(a.size)} · v${esc(a.ver)}</small></div>
+      ${ins?`<button class="btn outlined" data-installed="${a.id}">已安装</button>`:`<button class="btn filled" data-store-get="${a.id}">获取</button>`}</div>`;
+  }).join('');
+  return rows || `<div class="empty">${icon('search_off')}<p>没有找到匹配的应用</p></div>`;
+}
+function refreshStore(){ const l=$('#storeList'); if(l) l.innerHTML=storeListHTML(); }
+
+/* ===== WDPK 安装包管理（WebDew Package） ===== */
+const WDPK_FORMAT = 'WDPK';
+const WDPK_VERSION = 1;
+const BUILTIN_IDS = APPS.map(a => a.id);
+
+const STORE_APPS = [
+  {id:'wd.mail',    name:'邮差',     icon:'mail',           bg:'#1a3a6b', fg:'#c9dcff', dev:'WebDew 官方',  cat:'效率',   ver:'2.1.0', size:'18.6 MB', desc:'轻量邮件客户端，支持多账号收信提醒。'},
+  {id:'wd.camera',  name:'快照',     icon:'photo_camera',   bg:'#3a2140', fg:'#f3d0ff', dev:'WebDew 官方',  cat:'创意',   ver:'4.0.2', size:'42.1 MB', desc:'按下快门，滤镜即时生效。'},
+  {id:'wd.player',  name:'Sound',    icon:'graphic_eq',      bg:'#4a1130', fg:'#efb8c8', dev:'WebDew Sound', cat:'创意',   ver:'3.3.1', size:'56.8 MB', desc:'本地音乐播放器，支持播放列表。'},
+  {id:'wd.map',     name:'寻路',     icon:'map',            bg:'#14432e', fg:'#b6f0cd', dev:'WebDew 官方',  cat:'效率',   ver:'1.8.0', size:'33.5 MB', desc:'离线也能看的演示地图。'},
+  {id:'wd.block',   name:'方块世界', icon:'deployed_code',  bg:'#2e4a1a', fg:'#d6f0a8', dev:'独立开发者',   cat:'游戏',   ver:'0.9.4', size:'88.2 MB', desc:'在浏览器里搭一个方块大陆。'},
+  {id:'wd.rhythm',  name:'节拍',     icon:'equalizer',      bg:'#5a1f3a', fg:'#ffc9de', dev:'独立开发者',   cat:'游戏',   ver:'1.2.0', size:'64.0 MB', desc:'四点谱面音游，手感优先。'}
+];
+
+// 页面刷新后恢复导入过的应用定义
+store.get('wdpkApps', []).forEach(d => {
+  if(!d || !d.id) return;
+  const i = STORE_APPS.findIndex(x => x.id === d.id);
+  if(i >= 0) STORE_APPS[i] = Object.assign({}, STORE_APPS[i], d);
+  else STORE_APPS.push(d);
+});
+
+function esc(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function sanitizeApp(a){
+  const id = String(a.id || '').replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 40) || ('wd.import.' + Date.now());
+  return {
+    id: id,
+    name: String(a.name || '未命名应用').slice(0, 24),
+    icon: /^[a-z_0-9]+$/.test(String(a.icon || '')) ? a.icon : 'apps',
+    bg: /^#([0-9a-fA-F]{3,8})$/.test(String(a.bg || '')) ? a.bg : '#42475a',
+    fg: /^#([0-9a-fA-F]{3,8})$/.test(String(a.fg || '')) ? a.fg : '#dee1f7',
+    dev: String(a.dev || '未知开发者').slice(0, 30),
+    cat: String(a.cat || '其他').slice(0, 10),
+    ver: String(a.ver || '1.0.0').slice(0, 16),
+    size: String(a.size || '—').slice(0, 16),
+    desc: String(a.desc || '').slice(0, 120)
+  };
+}
+function appPageHTML(a){
+  return `<div class="card" style="text-align:center;padding:24px 16px">
+      <div style="width:72px;height:72px;border-radius:16px;background:${a.bg};color:${a.fg};display:grid;place-items:center;margin:0 auto 12px">${icon(a.icon)}</div>
+      <div style="font-size:16px;font-weight:700">${esc(a.name)}</div>
+      <p>v${esc(a.ver || '1.0.0')} · ${esc(a.dev || 'WebDew')} · ${esc(a.size || '—')}</p>
+    </div>
+    <div class="card"><div class="card-title">${icon('info')} 应用信息</div><p>${esc(a.desc || '这是一个通过 .wdpk 安装包安装的应用。')}</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn filled" data-wd-export="${esc(a.id)}">导出 .wdpk</button>
+      <button class="btn outlined" data-wd-share="${esc(a.id)}">分享安装码</button>
+      <button class="btn text" data-wd-uninstall="${esc(a.id)}">卸载</button>
+    </div>`;
+}
+function allApps(){
+  const extra = store.get('installed', []);
+  return APPS.concat(STORE_APPS.filter(a => extra.includes(a.id)).map(a => Object.assign({}, a, {wdpk:true})));
+}
+function isInstalled(id){ return BUILTIN_IDS.includes(id) || store.get('installed', []).includes(id); }
+
+function buildWdpk(app){
+  return {
+    format: WDPK_FORMAT,
+    version: WDPK_VERSION,
+    app: {id:app.id, name:app.name, icon:app.icon, bg:app.bg, fg:app.fg,
+          dev:app.dev || 'WebDew 官方', cat:app.cat || '效率', ver:app.ver || '1.0.0',
+          size:app.size || '—', desc:app.desc || ''},
+    exportedAt: new Date().toISOString()
+  };
+}
+function wdpkFileName(app){ return (app.name || 'app') + '_' + (app.ver || '1.0.0') + '.wdpk'; }
+
+function exportWdpk(id){
+  const app = STORE_APPS.find(a => a.id === id) || allApps().find(a => a.id === id);
+  if(!app){ toast('未找到该应用'); return; }
+  const pkg = buildWdpk(app);
+  const blob = new Blob([JSON.stringify(pkg, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = wdpkFileName(app);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  toast('已导出安装包：' + wdpkFileName(app));
+}
+function exportShareCode(id){
+  const app = STORE_APPS.find(a => a.id === id) || allApps().find(a => a.id === id);
+  if(!app){ toast('未找到该应用'); return; }
+  const code = 'WDPK-' + btoa(unescape(encodeURIComponent(JSON.stringify(buildWdpk(app).app)))).replace(/=+$/,'');
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).catch(()=>{});
+  toast('安装码已复制，可在“导入安装包”中粘贴');
+  dialog('分享安装码 ' + wdpkFileName(app), code);
+}
+function parseWdpk(text){
+  let raw;
+  try{ raw = JSON.parse(text); }
+  catch(e){
+    const s = String(text).trim().replace(/^WDPK-/, '');
+    raw = {format:'WDPK', version:1, app: JSON.parse(decodeURIComponent(escape(atob(s))))};
+  }
+  if(raw && raw.app) raw = Object.assign({format:'WDPK', version:1}, raw);
+  if(!raw || raw.format !== WDPK_FORMAT || !raw.app || !raw.app.id || !raw.app.name) throw new Error('bad package');
+  return raw;
+}
+function installWdpk(text){
+  const pkg = parseWdpk(text);
+  const a = sanitizeApp(pkg.app);
+  if(!a.id){ throw new Error('bad package'); }
+  if(BUILTIN_IDS.includes(a.id)){ toast('系统应用已内置，无需安装'); return a; }
+  const installed = store.get('installed', []);
+  if(!installed.includes(a.id)){ installed.push(a.id); store.set('installed', installed); }
+  const defs = store.get('wdpkApps', []);
+  const di = defs.findIndex(d => d.id === a.id);
+  if(di >= 0) defs[di] = a; else defs.push(a);
+  store.set('wdpkApps', defs);
+  const known = STORE_APPS.find(x => x.id === a.id);
+  if(!known) STORE_APPS.push(a);
+  else Object.assign(known, a);
+  refreshApps();
+  toast('已安装：' + a.name + '_' + a.ver + '.wdpk');
+  return a;
+}
+function pickWdpkFile(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.wdpk,application/json';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try{ installWdpk(String(r.result)); }
+      catch(e){ toast('导入失败：不是有效的 .wdpk 安装包'); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function importWdpkDialog(){
+  dialog('导入 .wdpk 安装包', '选择 .wdpk 文件，或先在下方输入 WDPK- 开头的分享安装码。');
+  setTimeout(() => {
+    const box = $('#dlgText');
+    const ta = document.createElement('textarea');
+    ta.placeholder = '在此粘贴 WDPK- 分享安装码（可选）';
+    ta.style.cssText = 'width:100%;height:64px;margin-top:8px;border-radius:8px;border:1px solid var(--md-outline);background:transparent;color:inherit;font-size:12px;padding:6px';
+    box.appendChild(ta);
+    const ok = $('#dlgOk');
+    ok.onclick = () => {                 // 覆盖式，避免重复打开时累积
+      ok.onclick = null;
+      const v = ta.value.trim();
+      if(v){
+        try{ installWdpk(v); }catch(e){ toast('导入失败：安装码无效'); }
+      } else { pickWdpkFile(); }
+    };
+  }, 0);
+}
+function uninstallWdpk(id){
+  const a = STORE_APPS.find(x => x.id === id);
+  if(!a || BUILTIN_IDS.includes(id)){ toast('系统应用不能卸载'); return; }
+  store.set('installed', store.get('installed', []).filter(x => x !== id));
+  if(state.recent === id){ state.recent = null; store.set('recent', null); }
+  refreshApps();
+  toast('已卸载：' + a.name);
+}
+function refreshApps(){
+  const parts = allApps().map(a => `
+  <div class="app" data-app="${a.id}">
+    <div class="icon" style="background:${a.bg};color:${a.fg}">${icon(a.icon)}</div>
+    <span>${esc(a.name)}</span>
+  </div>`);
+  $('#appGrid').innerHTML = parts.slice(0, 8).join('');
+  $('#appGrid2').innerHTML = parts.slice(8).join('');
+}
+
+function uptime(){ return performance.now()/1000; }
+
+const AFTER = {
+  notes(){
+    $('#fabText').textContent = '新建便签';
+    $('#fab').classList.remove('hidden');
+  },
+  todo(){
+    $('#fabText').textContent = '新建待办';
+    $('#fab').classList.remove('hidden');
+  },
+  clock(){
+    const t = ()=>{ const d=new Date(); $('#clockBig').textContent = d.toLocaleTimeString('zh-CN',{hour12:false}); $('#clockDate').textContent = $('#homeDate').textContent; };
+    t(); AFTER._clock = setInterval(t, 1000);
+  },
+  terminal(){
+    const out = $('#termOut'), inp = $('#termInput');
+    const print = s => { out.textContent += s + '\n'; out.scrollTop = out.scrollHeight; };
+    const run = () => {
+      const cmd = inp.value.trim(); if(!cmd) return;
+      print('webdroid@os:~$ ' + cmd);
+      const table = {
+        help: '可用命令: help / date / echo / ls / clear / theme / about / whoami',
+        date: new Date().toString(),
+        ls: 'settings  browser  gallery  music  notes  todo  calculator  terminal  weather  clock  about  store',
+        theme: (()=>{ toggleTheme(); return '主题已切换'; })(),
+        about: 'WebDewOS · 网页模拟器 14.0 · Material Design 3 · 纯前端实现',
+        whoami: '威斯 / 小威 · 18 · 山东枣庄',
+        clear: '__CLEAR__'
+      };
+      const r = table[cmd.split(' ')[0]] || `command not found: ${cmd}`;
+      if(r === '__CLEAR__'){ out.textContent = ''; }
+      else print(r);
+      inp.value = '';
+    };
+    $('#termGo').onclick = run;
+    inp.onkeydown = e => { if(e.key==='Enter') run(); };
+    inp.focus();
+  },
+  calculator(){
+    let buf = '0';
+    const out = $('#calcOut');
+    const show = () => { out.textContent = buf.length > 12 ? buf.slice(0,12) : buf; };
+    const act = k => {
+      if(k==='C') buf='0';
+      else if(k==='back') buf = buf.length>1 ? buf.slice(0,-1) : '0';
+      else if(k==='='){ try{ const r = Function('"use strict";return ('+buf+')')(); buf = String(Math.round(r*1e10)/1e10); }catch(e){ buf='Error'; } }
+      else { if(buf==='0' && /[0-9]/.test(k)) buf=''; buf += k; }
+      show();
+    };
+    if(AFTER._calcHandler) $('#appBody').removeEventListener('click', AFTER._calcHandler);
+    AFTER._calcHandler = e => { const b = e.target.closest('[data-calc]'); if(b) act(b.dataset.calc); };
+    $('#appBody').addEventListener('click', AFTER._calcHandler);
+  },
+  settings(){ syncSwitch($('#setTheme'), state.theme==='dark'); }
+};
+
+/* ===== 设置子页 ===== */
+const SUB = {
+  display(){
+    return `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('dark_mode')} 深色主题</span>
+      <button class="switch ${state.theme==='dark'?'on':''}" data-switch="theme"><i></i></button>
+    </div>
+    <div class="card">
+      <div class="card-title">${icon('brightness_6')} 亮度</div>
+      <input type="range" min="10" max="100" value="${state.brightness}" id="brightRange" style="width:100%;accent-color:var(--md-primary)">
+    </div>
+    <div class="card">
+      <div class="card-title">${icon('format_size')} 字体大小</div>
+      <div class="chips">${['小','中','大'].map(f=>`<button class="chip ${state.fontSize===f?'on':''}" data-font="${f}">${f}</button>`).join('')}</div>
+    </div>`;
+  },
+  sound(){
+    return `
+    <div class="card"><div class="card-title">${icon('volume_up')} 媒体音量</div>
+      <input type="range" min="0" max="100" value="60" style="width:100%;accent-color:var(--md-primary)"></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('do_not_disturb_on')} 勿扰模式</span>
+      <button class="switch" data-switch="dnd"><i></i></button>
+    </div>`;
+  },
+  net(){
+    return `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('wifi')} Wi-Fi</span>
+      <button class="switch on" data-switch="wifi"><i></i></button></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('bluetooth')} 蓝牙</span>
+      <button class="switch on" data-switch="bt"><i></i></button></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13.5px;display:flex;align-items:center;gap:8px">${icon('flight')} 飞行模式</span>
+      <button class="switch" data-switch="airplane"><i></i></button></div>`;
+  },
+  navset(){
+    return `
+    <div class="card"><div class="card-title">${icon('gesture')} 导航方式</div>
+      <div class="chips">
+        <button class="chip ${state.nav==='gesture'?'on':''}" data-nav="gesture">手势导航</button>
+        <button class="chip ${state.nav==='3btn'?'on':''}" data-nav="3btn">三按钮</button>
+      </div>
+      <p>手势模式：从屏幕底部上滑返回桌面；三按钮模式显示返回 / 主页 / 多任务。</p>
+    </div>`;
+  },
+  storage(){
+    const pct = 19.4;
+    return `
+    <div class="card"><div class="card-title">${icon('storage')} 已用 12.4 GB / 64 GB</div>
+      <div style="height:8px;border-radius:4px;background:var(--md-surface-container-highest);overflow:hidden;margin:8px 0"><i style="display:block;height:100%;width:${pct}%;background:var(--md-primary);border-radius:4px"></i></div>
+      <p>系统 6.2 GB · 应用 3.1 GB · 图片与视频 2.4 GB · 其他 0.7 GB</p>
+    </div>
+    <button class="btn outlined" data-fake="清理缓存">${icon('cleaning_services')} 清理缓存</button>`;
+  },
+  apps(){
+    const ins=store.get('installed',[]);
+    const rows=ins.length?ins.map(id=>{
+      const a=STORE_APPS.find(x=>x.id===id)||{name:id,ver:'1.0.0',icon:'apps'};
+      return `<div class="list-row"><div class="lead">${icon(a.icon)}</div><div class="txt"><b>${esc(a.name)}</b><small>v${esc(a.ver)} · .wdpk</small></div><button class="btn text" data-wd-export="${esc(a.id)}">导出</button></div>`;
+    }).join(''):`<div class="empty">${icon('package_2')}<p>还没有安装第三方应用</p></div>`;
+    return `<div class="card"><div class="card-title">${icon('package_2')} 已安装（.wdpk）</div>${rows}</div>
+      <div class="card"><div class="card-title">${icon('download')} 安装包管理</div>
+        <p>支持 <b>.wdpk</b>（WebDew Package）格式：导出后下载为文件，导入可装回系统；也可在应用商店导出。</p>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn filled" data-act="import-wdpk">导入 .wdpk</button><button class="btn outlined" data-act="demo-wdpk">导出示例包</button></div></div>`;
+  },
+  aboutset(){
+    return `<div class="card"><div class="card-title">${icon('perm_device_information')} 设备信息</div>
+      <p>WebDew Virtual · WebDewOS · 网页模拟器 14.0<br>设计语言：Material Design 3<br>本页面为纯前端界面模拟，所有数据仅存于本地浏览器。</p></div>`;
+  }
+};
+function openSub(key, title){
+  $('#subTitle').textContent = title;
+  $('#subBody').innerHTML = SUB[key]();
+  $('#subpage').classList.add('open');
+}
+$('#btnSubBack').onclick = () => $('#subpage').classList.remove('open');
+
+/* ===== 主题 ===== */
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.dataset.theme = state.theme;
+  store.set('theme', state.theme);
+  syncSwitch($('#setTheme'), state.theme==='dark');
+  syncSwitch($('[data-switch="theme"]'), state.theme==='dark');
+  $('#qsTheme').querySelector('.material-symbols-outlined').textContent = state.theme==='dark' ? 'dark_mode' : 'light_mode';
+  $('#qsTheme').childNodes[1].textContent = state.theme==='dark' ? '浅色' : '深色';
+  toast(state.theme==='dark' ? '已切换到深色主题' : '已切换到浅色主题');
+}
+function syncSwitch(el, on){ if(el) el.classList.toggle('on', !!on); }
+
+/* ===== 全局交互 ===== */
+document.addEventListener('click', e => {
+  const t = e.target;
+  // 设置项 -> 子页
+  const sc = t.closest('#storeChips .chip');
+  if(sc){ $$('#storeChips .chip').forEach(c=>c.classList.remove('on')); sc.classList.add('on'); store._cat=sc.dataset.cat; refreshStore(); return; }
+  const row = t.closest('.list-row[data-sub]');
+  if(row){
+    const map = {apps:['apps','应用与安装包'], display:['display','显示'],sound:['sound','声音与振动'],net:['net','网络与互联网'],navset:['navset','系统导航'],storage:['storage','存储'],aboutset:['aboutset','关于手机']};
+    const m = map[row.dataset.sub]; if(m) openSub(m[0], m[1]);
+    return;
+  }
+  // 开关
+  const sw = t.closest('.switch[data-switch]');
+  if(sw){
+    sw.classList.toggle('on');
+    const k = sw.dataset.switch;
+    if(k==='theme') toggleTheme();
+    else { syncSwitch($('[data-qs="'+k+'"]'), sw.classList.contains('on')); toast(sw.dataset.switch + ' 已' + (sw.classList.contains('on')?'开启':'关闭')); }
+    return;
+  }
+  if(t.closest('#setTheme')){ toggleTheme(); return; }
+  // 快捷设置
+  const qs = t.closest('.qs');
+  if(qs){
+    const k = qs.dataset.qs;
+    if(k==='theme'){ toggleTheme(); }
+    else { qs.classList.toggle('on'); if(k==='dnd') $('#sbMute').textContent = qs.classList.contains('on')?'do_not_disturb_on':'volume_up'; toast(k + ' 已' + (qs.classList.contains('on')?'开启':'关闭')); }
+    return;
+  }
+  // 导航方式
+  const nav = t.closest('[data-nav]');
+  if(nav){
+    state.nav = nav.dataset.nav; store.set('nav', state.nav);
+    document.body.classList.toggle('three-button', state.nav==='3btn');
+    $$('[data-nav]').forEach(b=>b.classList.toggle('on', b.dataset.nav===state.nav));
+    toast('已切换为' + (state.nav==='3btn'?'三按钮导航':'手势导航'));
+    return;
+  }
+  // 字体
+  const f = t.closest('[data-font]');
+  if(f){
+    state.fontSize = f.dataset.font; store.set('fontSize', state.fontSize);
+    $$('[data-font]').forEach(b=>b.classList.toggle('on', b===f));
+    $('#appBody').style.fontSize = state.fontSize==='小' ? '12px' : state.fontSize==='大' ? '15px' : '';
+    toast('字体大小：' + state.fontSize);
+    return;
+  }
+  // Chip 互斥
+  const chip = t.closest('.chip');
+  if(chip && chip.closest('.chips') && !chip.dataset.nav && !chip.dataset.font){
+    chip.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+    chip.classList.add('on');
+    return;
+  }
+  // 待办
+  const td = t.closest('[data-todo]');
+  if(td){
+    const i = +td.dataset.todo;
+    if(t.closest('.lead') || t.closest('.txt')){ state.todos[i].d = !state.todos[i].d; }
+    else { state.todos.splice(i,1); toast('已删除待办'); }
+    store.set('todos', state.todos);
+    $('#appBody').innerHTML = RENDER.todo();
+    return;
+  }
+  // 便签删除
+  const nt = t.closest('[data-note]');
+  if(nt){
+    dialog('删除这条便签？', state.notes[+nt.dataset.note].t);
+    $('#dlgOk').onclick = () => {
+      $('#dlgOk').onclick = null;
+      state.notes.splice(+nt.dataset.note, 1);
+      store.set('notes', state.notes);
+      $('#appBody').innerHTML = RENDER.notes();
+      toast('便签已删除');
+    };
+    return;
+  }
+  // 闹钟开关
+  if(t.closest('[data-alarm]')){ t.currentTarget.classList.toggle('on'); return; }
+  // 应用商店
+  if(t.closest('[data-act="import-wdpk"]')){ importWdpkDialog(); return; }
+  if(t.closest('[data-act="demo-wdpk"]')){ exportWdpk(STORE_APPS[0]); return; }
+  const ig = t.closest('[data-store-get]');
+  if(ig){
+    const id=ig.dataset.storeGet, a=STORE_APPS.find(x=>x.id===id);
+    ig.textContent='安装中…';
+    setTimeout(()=>{ installWdpk(JSON.stringify(buildWdpk(a))); refreshStore(); toast('已安装：'+wdpkFileName(a)); },800);
+    return;
+  }
+  const ins = t.closest('[data-installed]');
+  if(ins){
+    const id=ins.dataset.installed, a=STORE_APPS.find(x=>x.id===id)||{};
+    dialog('已安装：'+a.name,'可导出 .wdpk 安装包，复制分享安装码，或卸载该应用。');
+    const bar=document.createElement('div');
+    bar.style.cssText='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap';
+    bar.innerHTML=`<button class="btn filled" data-wd="export">导出 .wdpk</button><button class="btn outlined" data-wd="share">分享安装码</button><button class="btn text" data-wd="uninstall">卸载</button>`;
+    $('#dlgText').appendChild(bar);
+    bar.onclick=ev=>{
+      const b=ev.target.closest('[data-wd]'); if(!b) return;
+      if(b.dataset.wd==='export') exportWdpk(id);
+      if(b.dataset.wd==='share') exportShareCode(id);
+      if(b.dataset.wd==='uninstall'){ uninstallWdpk(id); refreshStore(); }
+      $('#dialog').classList.remove('show'); $('#scrim').classList.remove('show');
+    };
+    return;
+  }
+  const we = t.closest('[data-wd-export]');
+  if(we){ exportWdpk(we.dataset.wdExport); return; }
+  const ws = t.closest('[data-wd-share]');
+  if(ws){ exportShareCode(ws.dataset.wdShare); return; }
+  const wu = t.closest('[data-wd-uninstall]');
+  if(wu){ uninstallWdpk(wu.dataset.wdUninstall); closeApp(); return; }
+  // 浏览器假链接
+  const fk = t.closest('[data-fake]');
+  if(fk){ toast('演示条目：' + fk.dataset.fake); return; }
+  const ph = t.closest('[data-photo]');
+  if(ph){ toast('照片 ' + ph.dataset.photo + '（演示）'); return; }
+  if(t.closest('[data-play]')){ toast('播放器演示，无实际音频'); return; }
+  // 弹窗
+  if(t.closest('#dlgCancel') || (t.closest('#dlgOk') && !t.closest('[data-note]') )){ $('#dialog').classList.remove('show'); $('#scrim').classList.remove('show'); return; }
+  if(t.closest('#snackBtn')){ $('#snackbar').classList.remove('show'); return; }
+  // 导航栏
+  if(t.closest('#navHome')){
+    $('#recents').classList.remove('show');
+    closeApp(); setHomePage(0);
+    return;
+  }
+  if(t.closest('#navRecents')){
+    if($('#recents').classList.contains('show')) $('#recents').classList.remove('show');
+    else openRecents();
+    return;
+  }
+  if(t.closest('#navBack')){
+    $('#recents').classList.remove('show');
+    if($('#subpage').classList.contains('open')) $('#subpage').classList.remove('open');
+    else if($('#appLayer').classList.contains('open')) closeApp();
+    else if(state.homePage > 0) setHomePage(state.homePage - 1);
+    else toast('已在桌面');
+    return;
+  }
+  // FAB
+  if(t.closest('#fab')){
+    if($('#appTitle').textContent==='便签'){
+      const txt = prompt('便签内容');
+      if(txt){ state.notes.unshift({t: txt.slice(0,12), c: txt}); store.set('notes', state.notes); $('#appBody').innerHTML = RENDER.notes(); toast('便签已新建'); }
+    } else {
+      const txt = prompt('待办内容');
+      if(txt){ state.todos.push({t: txt, d:false}); store.set('todos', state.todos); $('#appBody').innerHTML = RENDER.todo(); toast('待办已添加'); }
+    }
+    return;
+  }
+  // 锁屏解锁
+  if(t.closest('#lock')) unlock();
+});
+
+/* ===== 搜索过滤 ===== */
+document.addEventListener('input', e => {
+  if(e.target.id==='setSearch'){
+    const q = e.target.value.trim().toLowerCase();
+    $$('#setList .list-row').forEach(r => {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+  if(e.target.id==='storeSearch'){ store._q=e.target.value; refreshStore(); }
+  if(e.target.id==='noteSearch'){
+    const q = e.target.value.trim().toLowerCase();
+    $$('#noteList .note-item').forEach(r => {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+});
+
+/* ===== 锁屏 / 通知中心 ===== */
+function unlock(){
+  $('#lock').classList.add('gone');
+  if(state.unread){ pushNotif(); state.unread = false; }
+}
+function pushNotif(){
+  const list = $('#notifList');
+  list.innerHTML = `
+    <div class="notif-item">${icon('language')}<div><b style="font-size:12.5px">WebDew 网络</b><p style="opacity:.7">欢迎回到 WebDewOS · 网页模拟器，今天有 3 条新动态</p></div></div>
+    <div class="notif-item">${icon('checklist')}<div><b style="font-size:12.5px">待办提醒</b><p style="opacity:.7">你还有 ${state.todos.filter(t=>!t.d).length} 项待办未完成</p></div></div>`;
+}
+let touchStartY = 0;
+document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const y = e.changedTouches[0].clientY;
+  if(!$('#lock').classList.contains('gone') && dy < -40) unlock();
+  else if(y < 60 && dy > 40 && !$('#appLayer').classList.contains('open')){
+    pushNotif();
+    $('#notifCenter').classList.add('show');
+  } else if(y < 200 && dy < -40 && $('#notifCenter').classList.contains('show')){
+    $('#notifCenter').classList.remove('show');
+  } else if(y > window.innerHeight - 60 && dy > 50){
+    if($('#subpage').classList.contains('open')) $('#subpage').classList.remove('open');
+    else if($('#appLayer').classList.contains('open')) closeApp();
+    else $('#notifCenter').classList.remove('show');
+  }
+}, {passive:true});
+document.addEventListener('click', e => {
+  if(!e.target.closest('#notifCenter') && !e.target.closest('.qs') && $('#notifCenter').classList.contains('show')){
+    $('#notifCenter').classList.remove('show');
+  }
+});
+// 桌面点击空白处关闭通知
+$('#home').addEventListener('click', () => $('#notifCenter').classList.remove('show'));
+
+/* ===== 初始化 ===== */
+document.body.classList.toggle('three-button', state.nav==='3btn');
+setHomePage(state.homePage || 0);
+refreshApps();
+$('#qsTheme').querySelector('.material-symbols-outlined').textContent = state.theme==='dark' ? 'dark_mode' : 'light_mode';
+$('#qsTheme').childNodes[1].textContent = state.theme==='dark' ? '浅色' : '深色';
+setTimeout(() => toast('上滑解锁，点击图标打开应用'), 600);
+</script>
+</body>
+</html>
